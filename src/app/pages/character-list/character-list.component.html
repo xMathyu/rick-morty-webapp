@@ -1,0 +1,126 @@
+<div class="container mx-auto px-4 py-8">
+    <!-- Toggle view mode -->
+    <div class="mb-6 flex space-x-4">
+        <button (click)="setMode(false)" [ngClass]="{
+          'bg-blue-500 text-white': !isExternal,
+          'bg-gray-200 text-gray-800': isExternal
+        }" class="px-4 py-2 rounded font-medium transition-colors duration-200">
+            Local Characters
+        </button>
+        <button (click)="setMode(true)" [ngClass]="{
+          'bg-blue-500 text-white': isExternal,
+          'bg-gray-200 text-gray-800': !isExternal
+        }" class="px-4 py-2 rounded font-medium transition-colors duration-200">
+            External Characters
+        </button>
+    </div>
+
+    <!-- Button to add character (only in local mode) -->
+    <div class="mb-4" *ngIf="!isExternal">
+        <button (click)="openCreateModal()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded transition-colors duration-200">
+            Add Character
+        </button>
+    </div>
+
+    <!-- Search bar -->
+    <div class="mb-6">
+        <div class="flex">
+            <input type="text" placeholder="Search character" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+                class="flex-1 border border-gray-300 rounded-l-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Search character" />
+            <button (click)="onSearch()"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-r-md transition-colors duration-200"
+                [attr.aria-label]="'Search'">
+                Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Character list -->
+    <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let character of characters"
+            class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 flex flex-col">
+            <img [src]="character.image" alt="{{ character.name }}" class="w-full h-56 object-cover rounded-t-lg" />
+            <div class="p-4 flex flex-col flex-1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ character.name }}</h2>
+                <p class="text-gray-600 mb-4 flex items-center">
+                    Status:
+                    <span class="font-medium flex items-center ml-1">
+                        <ng-container *ngIf="character.status === 'Alive'; else deadIcon">
+                            <!-- Icono para vivo -->
+                            <i class="fas fa-heartbeat text-green-500 mr-1" aria-hidden="true"></i>
+                            Alive
+                        </ng-container>
+                        <ng-template #deadIcon>
+                            <!-- Icono para muerto -->
+                            <i class="fas fa-skull text-red-500 mr-1" aria-hidden="true"></i>
+                            Dead
+                        </ng-template>
+                    </span>
+                </p>
+                <div class="mt-auto flex justify-between">
+                    <button (click)="openEditModal(character)"
+                        class="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded transition-colors duration-200"
+                        [attr.aria-label]="'Edit ' + character.name">
+                        Edit
+                    </button>
+                    <button (click)="onDelete(character)"
+                        class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition-colors duration-200"
+                        [attr.aria-label]="'Delete ' + character.name">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Custom pagination -->
+    <div class="mt-8 flex items-center justify-center space-x-4">
+        <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded disabled:opacity-50 transition-colors duration-200"
+            [attr.aria-label]="'Previous page'">
+            Previous
+        </button>
+        <span class="text-gray-700 font-medium">
+            Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === totalPages"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded disabled:opacity-50 transition-colors duration-200"
+            [attr.aria-label]="'Next page'">
+            Next
+        </button>
+    </div>
+
+    <!-- Confirmation modal (Delete) -->
+    <div *ngIf="modalOpen" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+        aria-modal="true" role="dialog">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Confirmation</h3>
+            <p class="text-gray-700 mb-6">
+                Are you sure you want to delete <span class="font-semibold">{{ characterToDelete?.name }}</span>?
+            </p>
+            <div class="flex justify-end space-x-4">
+                <button (click)="closeModal()"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-4 py-2 rounded transition-colors duration-200"
+                    [attr.aria-label]="'Cancel deletion'">
+                    No
+                </button>
+                <button (click)="confirmDelete()"
+                    class="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded transition-colors duration-200"
+                    [attr.aria-label]="'Confirm deletion'">
+                    Yes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character creation modal (standalone component) -->
+    <app-create-character-modal *ngIf="modalCreateOpen" (create)="confirmCreate($event)"
+        (cancel)="closeCreateModal()"></app-create-character-modal>
+
+    <!-- Character editing modal (standalone component) -->
+    <app-edit-character-modal *ngIf="modalEditOpen" [character]="characterToEdit" (edit)="confirmEdit($event)"
+        (cancel)="closeEditModal()"></app-edit-character-modal>
+</div>
